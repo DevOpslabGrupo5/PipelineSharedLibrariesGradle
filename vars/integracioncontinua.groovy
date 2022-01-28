@@ -15,42 +15,8 @@ def call(Map pipelineParameters){
                     sh 'printenv'
                 }
             }
-            stage("01 Validate Not Master Executions"){
-            //validaciones iniciales
-                // expresion regular solicitada release-v\d+-\d+-\d+
-                // tambien validar que no ejecute en master
-                when {
-                    anyOf {
-                            expression { BRANCH_NAME == 'master' }
-                            expression { BRANCH_NAME == 'main' }
-                    }           
-                }
-                steps {
-                    sh "echo  'Rama invalida'"
-                    script{
-                        error("Invalid Branch Name" + BRANCH_NAME )
-                    }   
-                }
-            }
-            stage("02 Validate Branch Name"){
-            //validaciones iniciales
-                // expresion regular solicitada release-v\d+-\d+-\d+
-                //Validar el tipo de rama a ejecutar (feature, develop o release)           
-                when {
-                    allOf {
-                        not { expression { BRANCH_NAME ==~ /feature.*/ } }
-                        not { expression { BRANCH_NAME ==~ /develop.*/ } }
-                        not { expression { BRANCH_NAME ==~ /release.*/ } }
-                    }                
-                }
-                steps {
-                    sh "echo  'Nombre Rama Invalido'"
-                    script{
-                        error("Invalid Branch Name" + BRANCH_NAME)
-                    }   
-                }
-            }
-            stage("03 Validate Maven Files"){
+
+            stage("0 Validate Maven Files"){
                 when {
                         anyOf {
                                 not { expression { fileExists ('pom.xml') }}
@@ -85,43 +51,59 @@ def call(Map pipelineParameters){
                 steps {
                     sh "echo 'Build .Jar!'"
                     // Run Maven on a Unix agent.
-                    sh "mvn clean package -e"
+                    //sh "mvn clean package -e"
                 }
             }
-            stage("4 SonarQube"){
-            //- Generar análisis con sonar para cada ejecución
-            //- Cada ejecución debe tener el siguiente formato de nombre: QUE ES EL NOMBRE DE EJECUCIÓN ??
-                //- {nombreRepo}-{rama}-{numeroEjecucion} ejemplo:
-                //- ms-iclab-feature-estadomundial(Si está usando el CRUD ms-iclab-feature-[nombre de su crud])
-                steps {
-                    withSonarQubeEnv('SonarQubeServer') {
-                        sh "echo 'SonarQube'"
-                        sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=githubfull'
-                    }
-                }
-                post {
-                    //- Subir el artefacto creado al repositorio privado de Nexus.
-                    //- Ejecutar este paso solo si los pasos anteriores se ejecutan de manera correcta.
-                    success {
-                        nexusPublisher nexusInstanceId: 'nexus', 
-                        nexusRepositoryId: 'devops-usach-nexus', 
-                        packages: [[$class: 'MavenPackage', 
-                            mavenAssetList: [[classifier: '', 
-                                            extension: '',
-                                            filePath: 'build/DevOpsUsach2020-0.0.1.jar']],
-                            mavenCoordinate: [artifactId: 'DevOpsUsach2020', 
-                                            groupId: 'com.devopsusach2020', 
-                                            packaging: 'jar', 
-                                            version: VERSION]]]
-                    }
-                }
-            }
+            // stage("4 SonarQube"){
+            // //- Generar análisis con sonar para cada ejecución
+            // //- Cada ejecución debe tener el siguiente formato de nombre: QUE ES EL NOMBRE DE EJECUCIÓN ??
+            //     //- {nombreRepo}-{rama}-{numeroEjecucion} ejemplo:
+            //     //- ms-iclab-feature-estadomundial(Si está usando el CRUD ms-iclab-feature-[nombre de su crud])
+            //     steps {
+            //         withSonarQubeEnv('SonarQubeServer') {
+            //             sh "echo 'SonarQube'"
+            //             sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=githubfull'
+            //         }
+            //     }
+            //     post {
+            //         //- Subir el artefacto creado al repositorio privado de Nexus.
+            //         //- Ejecutar este paso solo si los pasos anteriores se ejecutan de manera correcta.
+            //         success {
+            //             nexusPublisher nexusInstanceId: 'nexus', 
+            //             nexusRepositoryId: 'devops-usach-nexus', 
+            //             packages: [[$class: 'MavenPackage', 
+            //                 mavenAssetList: [[classifier: '', 
+            //                                 extension: '',
+            //                                 filePath: 'build/DevOpsUsach2020-0.0.1.jar']],
+            //                 mavenCoordinate: [artifactId: 'DevOpsUsach2020', 
+            //                                 groupId: 'com.devopsusach2020', 
+            //                                 packaging: 'jar', 
+            //                                 version: VERSION]]]
+            //         }
+            //     }
+            // }
             stage("6 gitCreateRelease"){
             //- Crear rama release cuando todos los stages anteriores estén correctamente ejecutados.
             //- Este stage sólo debe estar disponible para la rama develop.
                 steps {
                     sh "echo 'gitCreateRelease'"
+                    sh "git branch"
+                    sh "git checkout -b release/${BUILD_ID}"
+                    //sh "git merge ${GIT_BRANCH}"
+                    sh "git config --global user.email 'intohybrid@gmail.com'"
+                    sh "git config --global user.name  'Marcelo Contreras'"
+                    //sh "git add ."
+                    //sh "git commit -m 'Git commit hash en desarrollo ${GIT_COMMIT}'"
+                    sh "git push origin release/${BUILD_ID}"
                 }
+            }
+        }
+        post{
+            success{
+                slackSend color: 'good', message: "[mcontreras] [${JOB_NAME}] [${BUILD_TAG}] Ejecucion Exitosa", teamDomain: 'dipdevopsusac-tr94431', tokenCredentialId: 'slacksecret'
+            }
+            failure{
+                slackSend color: 'danger', message: "[mcontreras] [${JOB_NAME}] [${BUILD_TAG}] Ejecucion fallida en stage [${BUILD_ID}]", teamDomain: 'dipdevopsusac-tr94431', tokenCredentialId: 'slacksecret'
             }
         }
     }
