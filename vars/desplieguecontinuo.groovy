@@ -58,5 +58,13 @@ def call(Map pipelineParameters){
                 }
             }
         }
+        post{
+            success{
+                slackSend color: 'good', message: "[mcontreras] [${JOB_NAME}] [${BUILD_TAG}] Ejecucion Exitosa", teamDomain: 'dipdevopsusac-tr94431', tokenCredentialId: 'slacksecret'
+            }
+            failure{
+                slackSend color: 'danger', message: "[Su Nombre] [${JOB_NAME}] [${BUILD_TAG}] Ejecucion fallida en stage [${BUILD_ID}]", teamDomain: 'dipdevopsusac-tr94431', tokenCredentialId: 'slacksecret'
+            }
+        }
     }
 }
