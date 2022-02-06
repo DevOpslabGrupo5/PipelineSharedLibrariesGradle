@@ -134,7 +134,6 @@ def call(Map args) {
                     branch 'develop*'
                 }
                 steps {
-                    step {
                         sh "echo 'Push Develop'"
                         script {
                             STAGE = 'gitPushDevelop '
@@ -145,7 +144,6 @@ def call(Map args) {
                         git push origin develop
                         '''
                         }
-                    }
                 }
             }
         //    stage('Create Release') {
