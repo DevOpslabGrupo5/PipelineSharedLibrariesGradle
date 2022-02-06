@@ -141,10 +141,10 @@ def call(Map args) {
                         }
                         withCredentials([gitUsernamePassword(credentialsId: 'github-token')]) {
                             sh '''
-                            git push origin develop
                             git commit -am "Update pom.xml"
+                            git push origin develop
                             '''
-                            }
+                        }
                 }
             }
         //    stage('Create Release') {
