@@ -6,7 +6,9 @@ def call(Map args) {
             NEXUS_PASSWORD = credentials('passnexusadmin')
             STAGE = ' '
         }
-
+        parameters {
+            string  name: 'stages', description: 'Ingrese los stages para ejecutar', trim: true
+        }
         stages {
             stage('-1 logs') {
                 steps {
