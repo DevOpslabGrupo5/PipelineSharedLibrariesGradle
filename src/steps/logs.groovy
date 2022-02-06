@@ -1,6 +1,6 @@
 package steps
 
-def sBuild() {
+def fxLogs() {
     stage('-1 logs') {
                 steps {
                     //- Generar análisis con sonar para cada ejecución
