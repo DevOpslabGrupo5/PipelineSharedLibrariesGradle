@@ -7,7 +7,7 @@ def call(Map args) {
             STAGE = ' '
         }
         parameters {
-            string  name: 'What stage do you want to run now?', description: 'Ingrese los stages para ejecutar', trim: true
+            string  name: 'stages', description: 'Ingrese los stages para ejecutar', trim: true
         }
         stages {
             stage('-1 logs') {
@@ -27,6 +27,7 @@ def call(Map args) {
             stage('Input') {
                 steps {
                     script {
+                        sh "echo sh stages is ${params.stages}"
                             def listStagesOrder = [
                                 'build': 'sBuild',
                                 'sonar': 'sSonar',
@@ -38,7 +39,6 @@ def call(Map args) {
                                 ]
                                 stagesArray = searchKeyInArray(params.stages, ';', listStagesOrder)
                     }
-                    sh "echo 'stagesArray: '"
                 }
             }
             // stage('Validate mvn') {
