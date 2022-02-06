@@ -28,67 +28,65 @@ def call(Map args) {
                 steps {
                     script {
                         sh "echo sh stages is ${params.stages}"
-                            def listStagesOrder = [
-                                'build': 'sBuild',
-                                'sonar': 'sSonar',
-                                'run_spring_curl': 'sCurlSpring',
-                                'upload_nexus': 'sUNexus',
-                                'download_nexus': 'sDNexus',
-                                'run_jar': 'sTestJar',
-                                'curl_jar': 'sCurlJar'
-                                ]
+                            def listStagesOrder = ['compile', 'unit']
                                 stagesArray = searchKeyInArray(params.stages, ';', listStagesOrder)
                     }
                 }
             }
-            // stage('Validate mvn') {
-            //     when {
-            //             anyOf {
-            //                     not { expression { fileExists ('pom.xml') } }
-            //                     not { expression { fileExists ('mvnw') } }
-            //             }
-            //     }
+            stage('Validate mvn') {
+                when {
+                        anyOf {
+                                not { expression { fileExists ('pom.xml') } }
+                                not { expression { fileExists ('mvnw') } }
+                        }
+                }
 
-        //         steps {
-        //             sh "echo  'Faltan archivos Maven en su estructura'"
-        //             script {
-        //                 STAGE = 'Validate Maven Files '
-        //                 error('file dont exist :( ')
-        //             }
-        //         }
-        // }
-        // stage('Update POM') {
-        //     //- Este stage sólo debe estar disponible para la rama develop.
-        //     //- Upgrade version del pom.xml si corre develop
-        //     when {
-        //         branch 'develop*'
-        //     }
-        //     steps {
-        //         sh "echo 'mvnUpdatePom'"
-        //         script {
-        //             STAGE = 'Update POM '
-        //             sh 'mvn versions:set -DnewVersion=1.0.0'
-        //         }
-        //     }
-        // }
-        // stage('Compile') {
-        //     //- Compilar el código con comando maven
-        //     steps {
-        //         script { STAGE = 'Compile ' }
-        //         sh "echo 'Compile Code!'"
-        //         // Run Maven on a Unix agent.
-        //         sh 'mvn clean compile -e'
-        //     }
-        // }
-        // stage('Unit Test') {
-        //     //- Testear el código con comando maven
-        //     steps {
-        //         script { STAGE = 'Unit Test ' }
-        //         sh "echo 'Test Code!'"
-        //         // Run Maven on a Unix agent.
-        //         sh 'mvn clean test -e'
-        //     }
-        // }
+                steps {
+                    sh "echo  'Faltan archivos Maven en su estructura'"
+                    script {
+                        STAGE = 'Validate Maven Files '
+                        error('file dont exist :( ')
+                    }
+                }
+            }
+            stage('Update POM') {
+                //- Este stage sólo debe estar disponible para la rama develop.
+                //- Upgrade version del pom.xml si corre develop
+                when {
+                    branch 'develop*'
+                }
+                steps {
+                    sh "echo 'mvnUpdatePom'"
+                    script {
+                        STAGE = 'Update POM '
+                        sh 'mvn versions:set -DnewVersion=1.0.0'
+                    }
+                }
+            }
+            stage('Compile') {
+                //- Compilar el código con comando maven
+                when {
+                    expression { myStage == 'compile' }
+                }
+                steps {
+                    script { STAGE = 'Compile ' }
+                    sh "echo 'Compile Code!'"
+                    // Run Maven on a Unix agent.
+                    sh 'mvn clean compile -e'
+                }
+            }
+            stage('Unit Test') {
+                //- Testear el código con comando maven
+                when {
+                    expression { myStage == 'unit' }
+                }
+                steps {
+                    script { STAGE = 'Unit Test ' }
+                    sh "echo 'Test Code!'"
+                    // Run Maven on a Unix agent.
+                    sh 'mvn clean test -e'
+                }
+            }
         // stage('Build jar') {
         //     //- Generar artefacto del código compilado.
         //     steps {
