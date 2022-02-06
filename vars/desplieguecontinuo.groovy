@@ -49,7 +49,7 @@ def call(Map args) {
                 steps {
                     script { STAGE = 'Run Jar ' }
                     sh 'echo Run Jar'
-                    sh "nohup java -jar DevOpsUsach2020-${POM_VERSION}.jar & >/dev/null"
+                    sh "nohup java -Dserver.port=8888  -jar DevOpsUsach2020-${POM_VERSION}.jar & >/dev/null"
                 }
             }
             stage('test') {
@@ -58,9 +58,9 @@ def call(Map args) {
                 steps {
                     script { STAGE = 'test ' }
                     sh 'echo Test Curl'
-                    sh "sleep 30 && curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
-                    sh "sleep 5 && curl -X GET 'http://localhost:8081/rest/mscovid/estadoMundial'"
-                    sh "sleep 5 && curl -X GET 'http://localhost:8081/rest/mscovid/estadoPais?pais=chile'"
+                    sh "sleep 30 && curl -X GET 'http://localhost:8888/rest/mscovid/test?msg=testing'"
+                    sh "sleep 5 && curl -X GET 'http://localhost:8888/rest/mscovid/estadoMundial'"
+                    sh "sleep 5 && curl -X GET 'http://localhost:8888/rest/mscovid/estadoPais?pais=chile'"
                 }
                 post {
                     success {
