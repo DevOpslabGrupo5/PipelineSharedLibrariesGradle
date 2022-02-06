@@ -1,7 +1,8 @@
 package steps
 
 def fxLogs() {
-    stage('-1 logs') {
+    return {
+        stage('-1 logs') {
                 steps {
                     //- Generar análisis con sonar para cada ejecución
                     //- Cada ejecución debe tener el siguiente formato de nombre:
@@ -12,7 +13,8 @@ def fxLogs() {
                         currentBuild.displayName = GIT_REPO_NAME + '-' + BRANCH_NAME + '-' + BUILD_NUMBER
                     }
                     sh "echo 'branchname: '" + BRANCH_NAME
-            script { STAGE = '-1 logs ' }
+                script { STAGE = '-1 logs ' }
                 }
+        }
     }
 }
